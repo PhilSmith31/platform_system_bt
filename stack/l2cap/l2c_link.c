@@ -61,6 +61,7 @@ static const UINT8 hci_role_switch_black_list_prefix[][3] = {{0x00, 0x26, 0xb4} 
                                                              ,{0x1c, 0x48, 0xf9} /* Jabra Storm */
                                                              ,{0x8f, 0x20, 0xb4} /* BT1719 */
                                                              ,{0xa8, 0xb9, 0xb3} /* Sonata CarKit */
+                                                             ,{0xf4, 0x4e, 0xfd} /* UO Cube Speaker*/
                                                             };
 
 /*******************************************************************************
@@ -326,7 +327,7 @@ BOOLEAN l2c_link_hci_conn_comp (UINT8 status, UINT16 handle, BD_ADDR p_bda)
             l2cu_release_lcb (p_lcb);
         else                              /* there are any CCBs remaining */
         {
-            if (ci.status == HCI_ERR_CONNECTION_EXISTS)
+            if ((ci.status == HCI_ERR_CONNECTION_EXISTS)||(ci.status == HCI_ERR_CONTROLLER_BUSY))
             {
                 /* we are in collision situation, wait for connecttion request from controller */
                 p_lcb->link_state = LST_CONNECTING;

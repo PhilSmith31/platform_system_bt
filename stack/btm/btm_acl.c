@@ -76,6 +76,7 @@ static const UINT8 btm_role_switch_black_list_prefix2[][3] = {{0xfc, 0xc2, 0xde}
                                                              ,{0x00, 0x26, 0xb4} /* NAC FORD,2013 Lincoln */
                                                              ,{0x1c, 0x48, 0xf9} /* Jabra Storm */
                                                              ,{0x00, 0x54, 0xaf} /* Jeep Uconnect */
+                                                             ,{0xf4, 0x4e, 0xfd} /* UO Cube Speaker*/
                                                             };
 
 /*******************************************************************************

@@ -490,6 +490,8 @@ extern BOOLEAN btif_av_get_multicast_state();
 #ifdef BTA_AV_SPLIT_A2DP_ENABLED
 extern tBTA_AV_HNDL btif_av_get_av_hdl_from_idx(UINT8 idx);
 extern BOOLEAN btif_av_is_under_handoff();
+extern BOOLEAN btif_av_is_device_disconnecting();
+extern void btif_av_reset_reconfig_flag();
 void btif_media_send_reset_vendor_state();
 void btif_media_on_start_vendor_command();
 void btif_media_on_stop_vendor_command();
@@ -504,6 +506,8 @@ BOOLEAN btif_media_send_vendor_scmst_hdr();
 #else
 #define btif_av_get_av_hdl_from_idx(idx) (0)
 #define btif_av_is_under_handoff() (0)
+#define btif_av_is_device_disconnecting() (0)
+#define btif_av_reset_reconfig_flag() (0)
 #define btif_media_send_reset_vendor_state() (0)
 #define btif_media_on_start_vendor_command() (0)
 #define btif_media_on_stop_vendor_command()  (0)
@@ -529,6 +533,7 @@ BOOLEAN bta_av_co_audio_get_codec_config(UINT8 *p_config, UINT16 *p_minmtu, UINT
 extern BOOLEAN bt_split_a2dp_enabled;
 extern int btif_max_av_clients;
 static uint8_t multicast_query = FALSE;
+extern BOOLEAN reconfig_a2dp;
 /*****************************************************************************
  **  Misc helper functions
  *****************************************************************************/
@@ -795,14 +800,23 @@ static void btif_recv_ctrl_data(void)
     {
         case A2DP_CTRL_CMD_CHECK_READY:
 
-            if (media_task_running == MEDIA_TASK_STATE_SHUTTING_DOWN)
+            if (!bt_split_a2dp_enabled && media_task_running == MEDIA_TASK_STATE_SHUTTING_DOWN)
             {
                 APPL_TRACE_WARNING("%s: A2DP command %s while media task shutting down",
                                    __func__, dump_a2dp_ctrl_event(cmd));
                 a2dp_cmd_acknowledge(A2DP_CTRL_ACK_FAILURE);
                 return;
             }
-
+            if (bt_split_a2dp_enabled && !btif_hf_is_call_idle())
+            {
+                a2dp_cmd_acknowledge(A2DP_CTRL_ACK_INCALL_FAILURE);
+                return;
+            }
+            if (bt_split_a2dp_enabled && (btif_av_is_under_handoff() || reconfig_a2dp))
+            {
+                a2dp_cmd_acknowledge(A2DP_CTRL_ACK_SUCCESS);
+                return;
+            }
             /* check whether av is ready to setup a2dp datapath */
             if ((btif_av_stream_ready() == TRUE) || (btif_av_stream_started_ready() == TRUE))
             {
@@ -920,6 +934,23 @@ static void btif_recv_ctrl_data(void)
 
         case A2DP_CTRL_CMD_SUSPEND:
             /* local suspend */
+            APPL_TRACE_DEBUG("%s:A2DP command %s AV stream_started_ready %d",
+                             __func__, dump_a2dp_ctrl_event(cmd),btif_av_stream_started_ready());
+            if (bt_split_a2dp_enabled && reconfig_a2dp)
+            {
+                APPL_TRACE_DEBUG("Suspend called due to reconfig");
+                if (btif_av_is_under_handoff() && !btif_av_is_device_disconnecting())
+                {
+                    APPL_TRACE_DEBUG("AV is under handoff: do nothing");
+                }
+                //else if(btif_media_cb.tx_start_initiated || btif_av_is_device_disconnecting())
+                else
+                {
+                   APPL_TRACE_DEBUG("VS exchange started: ACK suspend, cmd_start will block");
+                   a2dp_cmd_acknowledge(A2DP_CTRL_ACK_SUCCESS);
+                }
+                break;
+            }
             if (btif_av_stream_started_ready())
             {
                 APPL_TRACE_DEBUG("Suspend stream request to Av");
@@ -1120,7 +1151,7 @@ static void btif_recv_ctrl_data(void)
             a2dp_cmd_acknowledge(A2DP_CTRL_ACK_SUCCESS);
             break;
         case A2DP_CTRL_GET_CONNECTION_STATUS:
-            if (btif_av_is_connected())
+            if (btif_av_is_connected() && media_task_running != MEDIA_TASK_STATE_SHUTTING_DOWN)
             {
                 BTIF_TRACE_DEBUG("got valid connection");
                 a2dp_cmd_acknowledge(A2DP_CTRL_ACK_SUCCESS);
@@ -3795,7 +3826,15 @@ static void btif_media_task_aa_stop_tx(void)
         {
             if (btif_media_cb.a2dp_cmd_pending == A2DP_CTRL_CMD_STOP ||
                 btif_media_cb.a2dp_cmd_pending == A2DP_CTRL_CMD_SUSPEND)
+            {
+                BTIF_TRACE_DEBUG("Ack Pending Stop/Suspend");
                 a2dp_cmd_acknowledge(A2DP_CTRL_ACK_SUCCESS);
+            }
+            else if (btif_media_cb.a2dp_cmd_pending == A2DP_CTRL_CMD_START)
+            {
+                BTIF_TRACE_ERROR("Ack Pending Start while Disconnect in Progress");
+                a2dp_cmd_acknowledge(A2DP_CTRL_ACK_DISCONNECT_IN_PROGRESS);
+            }
             else
             {
                 BTIF_TRACE_ERROR("Invalid cmd pending for ack");
@@ -4558,6 +4597,7 @@ void disconnect_a2dp_on_vendor_start_failure()
 {
     bt_bdaddr_t bd_addr;
     APPL_TRACE_IMP("disconnect_a2dp_on_vendor_start_failure");
+    btif_av_reset_reconfig_flag();
     btif_av_get_peer_addr(&bd_addr);
     btif_dispatch_sm_event(BTIF_AV_DISCONNECT_REQ_EVT,(char*)&bd_addr,
             sizeof(bt_bdaddr_t));
@@ -4619,6 +4659,7 @@ void btif_media_a2dp_start_cb(tBTM_VSC_CMPL *param)
     unsigned char status = 0;
     BT_HDR *p_buf;
 
+    btif_av_reset_reconfig_flag();
     if (param->param_len)
     {
         status = param->p_param_buf[0];
