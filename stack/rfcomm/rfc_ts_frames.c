@@ -568,7 +568,7 @@ UINT8 rfc_parse_data (tRFC_MCB *p_mcb, MX_FRAME *p_frame, BT_HDR *p_buf)
     else if (eal == 0)
     {
         RFCOMM_TRACE_ERROR("Bad Length when EAL = 0: %d", p_buf->len);
-        android_errorWriteLog(0x534e4554, "78288018");
+        LOG_ERROR(LOG_TAG, "78288018");
         return RFC_EVENT_BAD_FRAME;
     }
 
