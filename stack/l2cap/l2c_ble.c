@@ -612,7 +612,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
     if (p + 4 > p_pkt_end)
     {
         android_errorWriteLog(0x534e4554, "80261585");
-        SDP_TRACE_ERROR("invalid read");
+        L2CAP_TRACE_ERROR("invalid read");
         return;
     }
 
@@ -644,7 +644,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             if (p + 8 > p_pkt_end)
             {
                 android_errorWriteLog(0x534e4554, "80261585");
-                SDP_TRACE_ERROR("invalid read");
+                L2CAP_TRACE_ERROR("invalid read");
                 return;
             }
 
@@ -657,9 +657,6 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             {
                 if (min_interval < BTM_BLE_CONN_INT_MIN_LIMIT)
                     min_interval = BTM_BLE_CONN_INT_MIN_LIMIT;
-
-                if (max_interval < BTM_BLE_CONN_INT_MIN_LIMIT)
-                    max_interval = BTM_BLE_CONN_INT_MIN_LIMIT;
 
                 if (min_interval < BTM_BLE_CONN_INT_MIN || min_interval > BTM_BLE_CONN_INT_MAX ||
                     max_interval < BTM_BLE_CONN_INT_MIN || max_interval > BTM_BLE_CONN_INT_MAX ||
@@ -696,7 +693,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             if (p + 10 > p_pkt_end)
             {
                 android_errorWriteLog(0x534e4554, "80261585");
-                SDP_TRACE_ERROR("invalid read");
+                L2CAP_TRACE_ERROR("invalid read");
                 return;
             }
 
@@ -777,7 +774,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
                 if (p + 10 > p_pkt_end)
                 {
                     android_errorWriteLog(0x534e4554, "80261585");
-                    SDP_TRACE_ERROR("invalid read");
+                    L2CAP_TRACE_ERROR("invalid read");
                     return;
                 }
 
@@ -830,7 +827,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             if (p + 4 > p_pkt_end)
             {
                 android_errorWriteLog(0x534e4554, "80261585");
-                SDP_TRACE_ERROR("invalid read");
+                L2CAP_TRACE_ERROR("invalid read");
                 return;
             }
 
@@ -872,7 +869,7 @@ void l2cble_process_sig_cmd (tL2C_LCB *p_lcb, UINT8 *p, UINT16 pkt_len)
             if (p + 4 > p_pkt_end)
             {
                 android_errorWriteLog(0x534e4554, "80261585");
-                SDP_TRACE_ERROR("invalid read");
+                L2CAP_TRACE_ERROR("invalid read");
                 return;
             }
             STREAM_TO_UINT16 (rcid, p);
