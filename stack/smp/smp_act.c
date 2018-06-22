@@ -1003,7 +1003,7 @@ void smp_proc_enc_info(tSMP_CB *p_cb, tSMP_INT_DATA *p_data)
 
     if (smp_command_has_invalid_parameters(p_cb))
     {
-        android_errorWriteLog(0x534e4554, "111937065");
+        //android_errorWriteLog(0x534e4554, "111937065");
         smp_sm_event(p_cb, SMP_AUTH_CMPL_EVT, &reason);
         return;
     }
@@ -1026,7 +1026,7 @@ void smp_proc_master_id(tSMP_CB *p_cb, tSMP_INT_DATA *p_data)
     if (p_cb->rcvd_cmd_len < 11)
     {
         // 1(Code) + 2(EDIV) + 8(Rand)
-        android_errorWriteLog(0x534e4554, "111937027");
+        //android_errorWriteLog(0x534e4554, "111937027");
         SMP_TRACE_ERROR("%s: Invalid command length: %d, should be at least 11",
                         __func__, p_cb->rcvd_cmd_len);
         return;
@@ -1063,7 +1063,7 @@ void smp_proc_id_info(tSMP_CB *p_cb, tSMP_INT_DATA *p_data)
 
     if (smp_command_has_invalid_parameters(p_cb))
     {
-        android_errorWriteLog(0x534e4554, "111937065");
+        //android_errorWriteLog(0x534e4554, "111937065");
         smp_sm_event(p_cb, SMP_AUTH_CMPL_EVT, &reason);
         return;
     }
