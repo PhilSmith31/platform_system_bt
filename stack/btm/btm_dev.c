@@ -169,8 +169,6 @@ BOOLEAN BTM_SecAddDevice (BD_ADDR bd_addr, DEV_CLASS dev_class, BD_NAME bd_name,
  */
 BOOLEAN BTM_SecDeleteDevice (BD_ADDR bd_addr)
 {
-    BD_ADDR bda = { 0 };
-
     if (BTM_IsAclConnectionUp(bd_addr, BT_TRANSPORT_LE) ||
         BTM_IsAclConnectionUp(bd_addr, BT_TRANSPORT_BR_EDR))
     {
@@ -179,8 +177,10 @@ BOOLEAN BTM_SecDeleteDevice (BD_ADDR bd_addr)
     }
 
     tBTM_SEC_DEV_REC *p_dev_rec = btm_find_dev(bd_addr);
-    if (p_dev_rec != NULL) {
-        memcpy(bda, p_dev_rec->bd_addr, BD_ADDR_LEN);
+    if (p_dev_rec != NULL)
+    {
+        BD_ADDR bda;
+        memcpy(bda, bd_addr, BD_ADDR_LEN);
         btm_sec_free_dev(p_dev_rec);
         /* Tell controller to get rid of the link key, if it has one stored */
         BTM_DeleteStoredLinkKey(bda, NULL);
