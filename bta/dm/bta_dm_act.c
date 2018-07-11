@@ -26,6 +26,7 @@
 #define LOG_TAG "bt_bta_dm"
 
 #include <assert.h>
+#include <cutils/log.h>
 #include <string.h>
 
 #include "bt_target.h"
@@ -48,6 +49,8 @@
 #if (GAP_INCLUDED == TRUE)
 #include "gap_api.h"
 #endif
+
+#define BTA_MAX_SERVICES 32
 
 static void bta_dm_inq_results_cb (tBTM_INQ_RESULTS *p_inq, UINT8 *p_eir);
 static void bta_dm_inq_cmpl_cb (void * p_result);
@@ -592,7 +595,7 @@ static void bta_dm_disable_timer_cback(void *data)
         bta_dm_cb.disabling = FALSE;
 
         bta_sys_remove_uuid(UUID_SERVCLASS_PNP_INFORMATION);
-        bta_dm_disable_conn_down_timer_cback(NULL);
+        bta_dm_cb.p_sec_cback(BTA_DM_DISABLE_EVT, NULL);
     }
 }
 
@@ -1681,7 +1684,7 @@ void bta_dm_sdp_result (tBTA_DM_MSG *p_data)
 #endif
 
     UINT32 num_uuids = 0;
-    UINT8  uuid_list[32][MAX_UUID_SIZE]; // assuming a max of 32 services
+    UINT8  uuid_list[BTA_MAX_SERVICES][MAX_UUID_SIZE]; // assuming a max of 32 services
 
     if((p_data->sdp_event.sdp_result == SDP_SUCCESS)
         || (p_data->sdp_event.sdp_result == SDP_NO_RECS_MATCH)
@@ -1759,8 +1762,12 @@ void bta_dm_sdp_result (tBTA_DM_MSG *p_data)
                             (tBTA_SERVICE_MASK)(BTA_SERVICE_ID_TO_SERVICE_MASK(bta_dm_search_cb.service_index-1));
                         tmp_svc = bta_service_id_to_uuid_lkup_tbl[bta_dm_search_cb.service_index-1];
                         /* Add to the list of UUIDs */
-                        sdpu_uuid16_to_uuid128(tmp_svc, uuid_list[num_uuids]);
-                        num_uuids++;
+                        if (num_uuids < BTA_MAX_SERVICES) {
+                          sdpu_uuid16_to_uuid128(tmp_svc, uuid_list[num_uuids]);
+                          num_uuids++;
+                        } else {
+                          android_errorWriteLog(0x534e4554, "74016921");
+                        }
                     }
                 }
             }
@@ -1799,8 +1806,12 @@ void bta_dm_sdp_result (tBTA_DM_MSG *p_data)
                 {
                     if (SDP_FindServiceUUIDInRec_128bit(p_sdp_rec, &temp_uuid))
                     {
-                        memcpy(uuid_list[num_uuids], temp_uuid.uu.uuid128, MAX_UUID_SIZE);
-                        num_uuids++;
+                        if (num_uuids < BTA_MAX_SERVICES) {
+                          memcpy(uuid_list[num_uuids], temp_uuid.uu.uuid128, MAX_UUID_SIZE);
+                          num_uuids++;
+                        } else {
+                          android_errorWriteLog(0x534e4554, "74016921");
+                        }
                     }
                 }
             } while (p_sdp_rec);
@@ -3136,13 +3147,6 @@ static void bta_dm_bl_change_cback (tBTM_BL_EVENT_DATA *p_data)
         p_msg->hci_status = p_data->role_chg.hci_status;
         bdcpy(p_msg->bd_addr, p_data->role_chg.p_bda);
         break;
-    case BTM_BL_PKT_TYPE_CHG_EVT:
-        p_msg->pkt_type = p_data->pkt_type_chg.pkt_type;
-        bdcpy(p_msg->bd_addr, p_data->pkt_type_chg.remote_bd_addr);
-        break;
-    case BTM_BL_SOC_LOGGING_EVT:
-        p_msg->soc_log_id = p_data->soc_logging.soc_log_id;
-        break;
     case BTM_BL_COLLISION_EVT:
         bdcpy(p_msg->bd_addr, p_data->conn.p_bda);
         break;
@@ -3304,18 +3308,8 @@ void bta_dm_acl_change(tBTA_DM_MSG *p_data)
                 bta_dm_cb.p_sec_cback(BTA_DM_ROLE_CHG_EVT, (tBTA_DM_SEC *)&conn);
         }
         return;
-    case BTM_BL_PKT_TYPE_CHG_EVT:   /* packet type change event */
-        bdcpy(conn.pkt_type_chg.remote_bd_addr, p_bda);
-        conn.pkt_type_chg.pkt_type = (UINT16) p_data->acl_change.pkt_type;
-        if( bta_dm_cb.p_sec_cback )
-            bta_dm_cb.p_sec_cback(BTA_DM_PKT_TYPE_CHG_EVT, (tBTA_DM_SEC *)&conn);
-        return;
-    case BTM_BL_SOC_LOGGING_EVT:   /* packet type change event */
-        conn.soc_logging.soc_log_id = (UINT16) p_data->acl_change.soc_log_id;
-        if( bta_dm_cb.p_sec_cback )
-            bta_dm_cb.p_sec_cback(BTA_DM_SOC_LOGGING_EVT, (tBTA_DM_SEC *)&conn);
-        return;
     }
+
     /* Collision report from Stack: Notify profiles */
     if (p_data->acl_change.event == BTM_BL_COLLISION_EVT)
     {
@@ -3616,6 +3610,8 @@ static void bta_dm_reset_sec_dev_pending(BD_ADDR remote_bd_addr)
 *******************************************************************************/
 static void bta_dm_remove_sec_dev_entry(BD_ADDR remote_bd_addr)
 {
+    BD_ADDR addr_copy = { 0 };
+
     if ( BTM_IsAclConnectionUp(remote_bd_addr, BT_TRANSPORT_LE) ||
          BTM_IsAclConnectionUp(remote_bd_addr, BT_TRANSPORT_BR_EDR))
     {
@@ -3635,7 +3631,7 @@ static void bta_dm_remove_sec_dev_entry(BD_ADDR remote_bd_addr)
     {
         // remote_bd_addr comes from security record, which is removed in
         // BTM_SecDeleteDevice.
-        RawAddress addr_copy = remote_bd_addr;
+        memcpy(addr_copy, remote_bd_addr, BD_ADDR_LEN);
         BTM_SecDeleteDevice(addr_copy);
 #if (BLE_INCLUDED == TRUE && BTA_GATT_INCLUDED == TRUE)
         /* need to remove all pending background connection */
@@ -4542,7 +4538,6 @@ static UINT8 bta_dm_ble_smp_cback (tBTM_LE_EVT event, BD_ADDR bda, tBTM_LE_EVT_D
             else
             {
                 sec_event.auth_cmpl.success = TRUE;
-                sec_event.auth_cmpl.smp_over_br = p_data->complt.smp_over_br;
             }
 
             if (bta_dm_cb.p_sec_cback)

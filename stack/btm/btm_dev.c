@@ -169,6 +169,8 @@ BOOLEAN BTM_SecAddDevice (BD_ADDR bd_addr, DEV_CLASS dev_class, BD_NAME bd_name,
  */
 BOOLEAN BTM_SecDeleteDevice (BD_ADDR bd_addr)
 {
+    BD_ADDR bda = { 0 };
+
     if (BTM_IsAclConnectionUp(bd_addr, BT_TRANSPORT_LE) ||
         BTM_IsAclConnectionUp(bd_addr, BT_TRANSPORT_BR_EDR))
     {
@@ -178,10 +180,10 @@ BOOLEAN BTM_SecDeleteDevice (BD_ADDR bd_addr)
 
     tBTM_SEC_DEV_REC *p_dev_rec = btm_find_dev(bd_addr);
     if (p_dev_rec != NULL) {
-        RawAddress bda = p_dev_rec->bd_addr;
+        memcpy(bda, p_dev_rec->bd_addr, BD_ADDR_LEN);
         btm_sec_free_dev(p_dev_rec);
         /* Tell controller to get rid of the link key, if it has one stored */
-        BTM_DeleteStoredLinkKey(&bda, NULL);
+        BTM_DeleteStoredLinkKey(bda, NULL);
     }
 
     return TRUE;
@@ -297,7 +299,6 @@ void btm_sec_free_dev (tBTM_SEC_DEV_REC *p_dev_rec)
     p_dev_rec->bond_type = BOND_TYPE_UNKNOWN;
     p_dev_rec->sec_flags = 0;
     p_dev_rec->sm4 = BTM_SM4_UNKNOWN;
-    p_dev_rec->p_callback = NULL;
 
 #if BLE_INCLUDED == TRUE
     /* Clear out any saved BLE keys */
