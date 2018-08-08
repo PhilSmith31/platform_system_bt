@@ -866,7 +866,7 @@ tBTA_AV_EVT bta_av_proc_meta_cmd(tAVRC_RESPONSE  *p_rc_rsp, tBTA_AV_RC_MSG *p_ms
             p = p_vendor->p_vendor_data + 2;
             p_rc_rsp->get_caps.capability_id = u8;
             BE_STREAM_TO_UINT16 (u16, p);
-            if (u16 != 1) {
+            if (u16 != 1)
             {
                 p_rc_rsp->get_caps.status = AVRC_STS_INTERNAL_ERR;
             }
