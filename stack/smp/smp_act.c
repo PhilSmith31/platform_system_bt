@@ -1032,7 +1032,7 @@ void smp_proc_master_id(tSMP_CB *p_cb, tSMP_INT_DATA *p_data)
     if (p_cb->rcvd_cmd_len < 11)
     {
         // 1(Code) + 2(EDIV) + 8(Rand)
-        //android_errorWriteLog(0x534e4554, "111937027");
+        android_errorWriteLog(0x534e4554, "111937027");
         SMP_TRACE_ERROR("%s: Invalid command length: %d, should be at least 11",
                         __func__, p_cb->rcvd_cmd_len);
         return;
