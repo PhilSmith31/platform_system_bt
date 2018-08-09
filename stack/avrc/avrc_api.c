@@ -599,6 +599,7 @@ static void avrc_msg_cback(UINT8 handle, UINT8 label, UINT8 cr,
     {
         if (p_pkt->len < AVRC_AVC_HDR_SIZE)
         {
+            android_errorWriteLog(0x534e4554, "111803925");
             AVRC_TRACE_WARNING("%s: message length %d too short: must be at least %d",
                                __func__, p_pkt->len, AVRC_AVC_HDR_SIZE);
             osi_free(p_pkt);
