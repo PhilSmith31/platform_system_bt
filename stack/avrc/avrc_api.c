@@ -597,27 +597,25 @@ static void avrc_msg_cback(UINT8 handle, UINT8 label, UINT8 cr,
     AVRC_TRACE_DEBUG("layer_specific %x",p_pkt->layer_specific);
     if (p_pkt->layer_specific != AVCT_DATA_BROWSE)
     {
+        if (p_pkt->len < AVRC_AVC_HDR_SIZE)
         {
-            if (p_pkt->len < AVRC_AVC_HDR_SIZE)
-            {
-                android_errorWriteLog(0x534e4554, "111803925");
-                AVRC_TRACE_WARNING("%s: message length %d too short: must be at least %d",
-                                   __func__, p_pkt->len, AVRC_AVC_HDR_SIZE);
-                osi_free(p_pkt);
-                return;
-            }
-            msg.hdr.ctype           = p_data[0] & AVRC_CTYPE_MASK;
-            AVRC_TRACE_DEBUG("avrc_msg_cback handle:%d, ctype:%d, offset:%d, len: %d",
-                    handle, msg.hdr.ctype, p_pkt->offset, p_pkt->len);
-            msg.hdr.subunit_type    = (p_data[1] & AVRC_SUBTYPE_MASK) >> AVRC_SUBTYPE_SHIFT;
-            msg.hdr.subunit_id      = p_data[1] & AVRC_SUBID_MASK;
-            opcode                  = p_data[2];
+            AVRC_TRACE_WARNING("%s: message length %d too short: must be at least %d",
+                               __func__, p_pkt->len, AVRC_AVC_HDR_SIZE);
+            osi_free(p_pkt);
+            return;
         }
+
+        msg.hdr.ctype           = p_data[0] & AVRC_CTYPE_MASK;
+        AVRC_TRACE_DEBUG("avrc_msg_cback handle:%d, ctype:%d, offset:%d, len: %d",
+                 handle, msg.hdr.ctype, p_pkt->offset, p_pkt->len);
+        msg.hdr.subunit_type    = (p_data[1] & AVRC_SUBTYPE_MASK) >> AVRC_SUBTYPE_SHIFT;
+        msg.hdr.subunit_id      = p_data[1] & AVRC_SUBID_MASK;
+        opcode                  = p_data[2];
+
         AVRC_TRACE_DEBUG("opcode %d",opcode);
         if ( ((avrc_cb.ccb[handle].control & AVRC_CT_TARGET) && (cr == AVCT_CMD)) ||
            ((avrc_cb.ccb[handle].control & AVRC_CT_CONTROL) && (cr == AVCT_RSP)) )
         {
-        
             switch(opcode)
             {
             case AVRC_OP_UNIT_INFO:
