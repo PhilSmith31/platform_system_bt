@@ -373,9 +373,9 @@ static tAVRC_STS avrc_ctrl_pars_vendor_rsp(
                 {
                      osi_free(p_result->get_app_attr_txt.p_attrs[j].p_str);
                 }
-            osi_free_and_reset((void**)&p_result->get_app_attr_txt.p_attrs);
-            p_result->get_app_attr_txt.num_attr = 0;
-            goto length_error;
+                osi_free_and_reset((void**)&p_result->get_app_attr_txt.p_attrs);
+                p_result->get_app_attr_txt.num_attr = 0;
+                goto length_error;
             }
             BE_STREAM_TO_UINT8(p_result->get_app_attr_txt.p_attrs[xx].attr_id, p);
             BE_STREAM_TO_UINT16(p_result->get_app_attr_txt.p_attrs[xx].charset_id, p);
