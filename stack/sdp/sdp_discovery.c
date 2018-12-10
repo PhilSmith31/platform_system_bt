@@ -29,6 +29,7 @@
 #include "bt_target.h"
 #include "bt_common.h"
 #include "l2cdefs.h"
+#include "log/log.h"
 #include "hcidefs.h"
 #include "hcimsgs.h"
 #include "sdp_api.h"
@@ -45,7 +46,7 @@
 /*              L O C A L    F U N C T I O N     P R O T O T Y P E S            */
 /********************************************************************************/
 #if SDP_CLIENT_ENABLED == TRUE
-static void          process_service_search_rsp (tCONN_CB *p_ccb, UINT8 *p_reply);
+static void          process_service_search_rsp (tCONN_CB *p_ccb, UINT8 *p_reply, UINT8 *p_reply_end);
 static void          process_service_attr_rsp (tCONN_CB *p_ccb, UINT8 *p_reply);
 static void          process_service_search_attr_rsp (tCONN_CB *p_ccb, UINT8 *p_reply);
 static UINT8         *save_attr_seq (tCONN_CB *p_ccb, UINT8 *p, UINT8 *p_msg_end);
@@ -235,6 +236,7 @@ void sdp_disc_server_rsp (tCONN_CB *p_ccb, BT_HDR *p_msg)
 
     /* Got a reply!! Check what we got back */
     p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+    UINT8* p_end = p + p_msg->len;
 
     BE_STREAM_TO_UINT8 (rsp_pdu, p);
 
@@ -245,7 +247,7 @@ void sdp_disc_server_rsp (tCONN_CB *p_ccb, BT_HDR *p_msg)
     case SDP_PDU_SERVICE_SEARCH_RSP:
         if (p_ccb->disc_state == SDP_DISC_WAIT_HANDLES)
         {
-            process_service_search_rsp (p_ccb, p);
+            process_service_search_rsp (p_ccb, p, p_end);
             invalid_pdu = FALSE;
         }
         break;
@@ -284,16 +286,16 @@ void sdp_disc_server_rsp (tCONN_CB *p_ccb, BT_HDR *p_msg)
 ** Returns          void
 **
 *******************************************************************************/
-static void process_service_search_rsp (tCONN_CB *p_ccb, UINT8 *p_reply)
+static void process_service_search_rsp (tCONN_CB *p_ccb, UINT8 *p_reply, UINT8 *p_reply_end)
 {
     UINT16      xx;
     UINT16      total, cur_handles, orig;
     UINT8       cont_len;
 
     if (p_reply + 8 > p_reply_end) {
-        android_errorWriteLog(0x534e4554, "74249842");
-         sdp_disconnect(p_ccb, SDP_GENERIC_ERROR);
-         return;
+        //android_errorWriteLog(0x534e4554, "74249842");
+        sdp_disconnect(p_ccb, SDP_GENERIC_ERROR);
+        return;
     }
 
     /* Skip transaction, and param len */
