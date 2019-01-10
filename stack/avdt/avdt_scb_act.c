@@ -421,6 +421,7 @@ UINT8 * avdt_scb_hdl_report(tAVDT_SCB *p_scb, UINT8 *p, UINT16 len)
             BE_STREAM_TO_UINT32(report.rr.dlsr, p);
             break;
         case AVDT_RTCP_PT_SDES: /* the packet type - SDES (Source Description) */
+        {
             uint8_t sdes_type;
             min_len += 1;
             if (min_len > len)
@@ -460,12 +461,13 @@ UINT8 * avdt_scb_hdl_report(tAVDT_SCB *p_scb, UINT8 *p, UINT16 len)
                 result = AVDT_BUSY;
             }
             break;
+        }
         default:
             AVDT_TRACE_ERROR("Bad Report pkt - packet type: %d", pt);
             result = AVDT_BAD_PARAMS;
         }
         if(result == AVDT_SUCCESS)
-            (*p_scb->stream_config.p_report_cback)(avdt_scb_to_hdl(p_scb),
+            (*p_scb->cs.p_report_cback)(avdt_scb_to_hdl(p_scb),
                                                    pt, &report);
     }
 avdt_scb_hdl_report_exit:
