@@ -874,7 +874,7 @@ void l2c_lcc_proc_pdu(tL2C_CCB *p_ccb, BT_HDR *p_buf)
         {
             L2CAP_TRACE_ERROR("%s: buffer length=%d too small. Need at least 2.",
                               __func__, p_buf->len);
-            android_errorWriteWithInfoLog(0x534e4554, "120665616", -1, NULL, 0);
+            //android_errorWriteWithInfoLog(0x534e4554, "120665616", -1, NULL, 0);
             /* Discard the buffer */
             osi_free(p_buf);
             return;
