@@ -254,65 +254,70 @@ extern void     sdp_disconnect (tCONN_CB*p_ccb, UINT16 reason);
 extern UINT16 sdp_set_max_attr_list_size (UINT16 max_size);
 #endif
 
-/* Functions provided by sdp_conn.c
-*/
-extern void sdp_conn_rcv_l2e_conn_ind (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_conn_cfm (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_disc (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_config_ind (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_config_cfm (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_conn_failed (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_connected (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_conn_failed (BT_HDR *p_msg);
-extern void sdp_conn_rcv_l2e_data (BT_HDR *p_msg);
-extern void sdp_conn_timer_timeout(void *data);
+/* Functions provided by sdp_conn.cc
+ */
+extern void sdp_conn_rcv_l2e_conn_ind(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_conn_cfm(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_disc(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_config_ind(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_config_cfm(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_conn_failed(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_connected(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_conn_failed(BT_HDR* p_msg);
+extern void sdp_conn_rcv_l2e_data(BT_HDR* p_msg);
+extern void sdp_conn_timer_timeout(void* data);
 
-extern tCONN_CB *sdp_conn_originate (UINT8 *p_bd_addr);
+extern tCONN_CB* sdp_conn_originate(const RawAddress& p_bd_addr);
 
-/* Functions provided by sdp_utils.c
-*/
-extern tCONN_CB *sdpu_find_ccb_by_cid (UINT16 cid);
-extern tCONN_CB *sdpu_find_ccb_by_db (tSDP_DISCOVERY_DB *p_db);
-extern tCONN_CB *sdpu_allocate_ccb (void);
-extern void      sdpu_release_ccb (tCONN_CB *p_ccb);
-extern void      sdpu_update_ccb_cont_info (UINT32 handle);
+/* Functions provided by sdp_utils.cc
+ */
+extern tCONN_CB* sdpu_find_ccb_by_cid(uint16_t cid);
+extern tCONN_CB* sdpu_find_ccb_by_db(tSDP_DISCOVERY_DB* p_db);
+extern tCONN_CB* sdpu_allocate_ccb(void);
+extern void sdpu_release_ccb(tCONN_CB* p_ccb);
 
-extern UINT8    *sdpu_build_attrib_seq (UINT8 *p_out, UINT16 *p_attr, UINT16 num_attrs);
-extern UINT8    *sdpu_build_attrib_entry (UINT8 *p_out, tSDP_ATTRIBUTE *p_attr);
-extern void      sdpu_build_n_send_error (tCONN_CB *p_ccb, UINT16 trans_num, UINT16 error_code, char *p_error_text);
+extern uint8_t* sdpu_build_attrib_seq(uint8_t* p_out, uint16_t* p_attr,
+                                      uint16_t num_attrs);
+extern uint8_t* sdpu_build_attrib_entry(uint8_t* p_out, tSDP_ATTRIBUTE* p_attr);
+extern void sdpu_build_n_send_error(tCONN_CB* p_ccb, uint16_t trans_num,
+                                    uint16_t error_code, char* p_error_text);
 
-extern UINT8    *sdpu_extract_attr_seq (UINT8 *p, UINT16 param_len, tSDP_ATTR_SEQ *p_seq);
-extern UINT8    *sdpu_extract_uid_seq (UINT8 *p, UINT16 param_len, tSDP_UUID_SEQ *p_seq);
+extern uint8_t* sdpu_extract_attr_seq(uint8_t* p, uint16_t param_len,
+                                      tSDP_ATTR_SEQ* p_seq);
+extern uint8_t* sdpu_extract_uid_seq(uint8_t* p, uint16_t param_len,
+                                     tSDP_UUID_SEQ* p_seq);
 
-extern UINT8    *sdpu_get_len_from_type (UINT8 *p, UINT8 type, UINT32 *p_len);
-extern BOOLEAN  sdpu_is_base_uuid (UINT8 *p_uuid);
-extern BOOLEAN  sdpu_compare_uuid_arrays (UINT8 *p_uuid1, UINT32 len1, UINT8 *p_uuid2, UINT16 len2);
-extern BOOLEAN  sdpu_compare_bt_uuids (tBT_UUID *p_uuid1, tBT_UUID *p_uuid2);
-extern BOOLEAN  sdpu_compare_uuid_with_attr (tBT_UUID *p_btuuid, tSDP_DISC_ATTR *p_attr);
+extern uint8_t* sdpu_get_len_from_type(uint8_t* p, uint8_t* p_end, uint8_t type,
+                                       uint32_t* p_len);
+extern bool sdpu_is_base_uuid(uint8_t* p_uuid);
+extern bool sdpu_compare_uuid_arrays(uint8_t* p_uuid1, uint32_t len1,
+                                     uint8_t* p_uuid2, uint16_t len2);
+extern bool sdpu_compare_uuid_with_attr(const bluetooth::Uuid& uuid,
+                                        tSDP_DISC_ATTR* p_attr);
 
-extern void     sdpu_sort_attr_list( UINT16 num_attr, tSDP_DISCOVERY_DB *p_db );
-extern UINT16 sdpu_get_list_len( tSDP_UUID_SEQ   *uid_seq, tSDP_ATTR_SEQ   *attr_seq );
-extern UINT16 sdpu_get_attrib_seq_len(tSDP_RECORD *p_rec, tSDP_ATTR_SEQ *attr_seq);
-extern UINT16 sdpu_get_attrib_entry_len(tSDP_ATTRIBUTE *p_attr);
-extern UINT8 *sdpu_build_partial_attrib_entry (UINT8 *p_out, tSDP_ATTRIBUTE *p_attr, UINT16 len, UINT16 *offset);
-extern void sdpu_uuid16_to_uuid128(UINT16 uuid16, UINT8* p_uuid128);
+extern void sdpu_sort_attr_list(uint16_t num_attr, tSDP_DISCOVERY_DB* p_db);
+extern uint16_t sdpu_get_list_len(tSDP_UUID_SEQ* uid_seq,
+                                  tSDP_ATTR_SEQ* attr_seq);
+extern uint16_t sdpu_get_attrib_seq_len(tSDP_RECORD* p_rec,
+                                        tSDP_ATTR_SEQ* attr_seq);
+extern uint16_t sdpu_get_attrib_entry_len(tSDP_ATTRIBUTE* p_attr);
+extern uint8_t* sdpu_build_partial_attrib_entry(uint8_t* p_out,
+                                                tSDP_ATTRIBUTE* p_attr,
+                                                uint16_t len, uint16_t* offset);
 
-/* Functions provided by sdp_db.c
-*/
-extern tSDP_RECORD    *sdp_db_service_search (tSDP_RECORD *p_rec, tSDP_UUID_SEQ *p_seq);
-extern tSDP_RECORD    *sdp_db_find_record (UINT32 handle);
-extern tSDP_ATTRIBUTE *sdp_db_find_attr_in_rec (tSDP_RECORD *p_rec, UINT16 start_attr, UINT16 end_attr);
-extern BOOLEAN SDP_AddAttributetoRecord (tSDP_RECORD *p_rec, UINT16 attr_id, UINT8 attr_type,
-                                  UINT32 attr_len, UINT8 *p_val);
-extern BOOLEAN SDP_AddProfileDescriptorListtoRecord (tSDP_RECORD *p_rec, UINT16 profile_uuid,
-                                      UINT16 version);
-extern BOOLEAN SDP_DeleteAttributefromRecord (tSDP_RECORD *p_rec, UINT16 attr_id);
+/* Functions provided by sdp_db.cc
+ */
+extern tSDP_RECORD* sdp_db_service_search(tSDP_RECORD* p_rec,
+                                          tSDP_UUID_SEQ* p_seq);
+extern tSDP_RECORD* sdp_db_find_record(uint32_t handle);
+extern tSDP_ATTRIBUTE* sdp_db_find_attr_in_rec(tSDP_RECORD* p_rec,
+                                               uint16_t start_attr,
+                                               uint16_t end_attr);
 
-
-/* Functions provided by sdp_server.c
-*/
-#if SDP_SERVER_ENABLED == TRUE
-extern void     sdp_server_handle_client_req (tCONN_CB *p_ccb, BT_HDR *p_msg);
+/* Functions provided by sdp_server.cc
+ */
+#if (SDP_SERVER_ENABLED == TRUE)
+extern void sdp_server_handle_client_req(tCONN_CB* p_ccb, BT_HDR* p_msg);
 #else
 #define sdp_server_handle_client_req(p_ccb, p_msg)
 #endif
